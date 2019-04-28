@@ -1,0 +1,52 @@
+import ij.measure.ResultsTable;
+import java.awt.Color;
+import java.awt.Shape;
+import java.awt.geom.Ellipse2D;
+import java.awt.geom.Point2D;
+
+import org.jfree.chart.axis.LogAxis;
+import org.jfree.chart.axis.NumberTickUnit;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartFrame;
+import org.jfree.data.xy.XYSeries;
+import org.jfree.data.xy.XYSeriesCollection;
+
+
+//-------------Analysis and Plotting--------------//
+img = ij.IJ.getImage();
+ij.ImageStack stack = img.getImageStack();
+
+ij.plugin.ImageCalculator calc = new ij.plugin.ImageCalculator();
+XYSeries data = new XYSeries("");
+ResultsTable rt = new ResultsTable();
+rt.reset();
+
+for (int i=0; i <stack.getSize()/2; i++) {
+	ip = stack.getProcessor(2*i + 1); 
+	ip2 = stack.getProcessor(2*i + 2);
+	ij.process.ImageStatistics stats = ip.getStatistics();
+	ipDiff = calc.run("Divide create 32-bit", new ij.ImagePlus("1", ip), new ij.ImagePlus("2",ip2) );
+	ij.process.ImageStatistics statsDiff = ipDiff.getStatistics();
+	stdDev = statsDiff.stdDev;
+	rt.incrementCounter();
+	rt.addValue("Signal DN", stats.mean);
+	rt.addValue("Noise DN", stdDev);
+	rt.addValue("Diff in signal", statsDiff.mean); 
+	//if (i>0) {
+	//	rt.addValue("Slope of Log", ( (Math.log(stdDev) - Math.log(data.getY(i-1))) / (Math.log(stats.mean) - Math.log(data.getX(i-1)))));
+	//	rt.addValue("PCF", stats.mean/(stdDev*stdDev));
+	}
+	gui.message("Processing: " + i);
+	data.add(i, statsDiff.mean);
+}
+
+t = "Photon Transfer Data -" + img.getTitle();
+rt.show(t);
+plotData("Photon Transfer Curve -" + img.getTitle(), data, "Frame", "GFac", 100, 100, true, true);
+
+}
+

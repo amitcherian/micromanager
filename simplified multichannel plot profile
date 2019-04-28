@@ -1,0 +1,101 @@
+//@ImagePlus imp
+/*
+ * Multichannel_Plot_Profile.bsh
+ * IJ BAR: https://github.com/tferr/Scripts#scripts
+ *
+ * BeanShell script that extends the Analyze>Plot Profile to multichannel (composite) images. It
+ * features a "live" option, guesses displayed lookup tables and ignores disabled channels (i.e.,
+ * those deselected in the "Channels" widget (which can be called by pressing "Z", the shortcut for
+ * "Image>Color>Channels Tool"). Similarly to the built-in Analyze>Plot Profile, Y-axis limits are
+ * always set by the active channel.
+ *
+ * This builds upon Jerome Mutterer's take on a remarkably succinct script using bit-twiddling to
+ * detect displayed LUTs (discussed here: https://github.com/tferr/Scripts/issues/6).
+ *
+ */
+import ij.gui.Plot;
+import java.util.Arrays; 
+import java.util.Collections; 
+import ij.IJ;
+import ij.io.FileSaver;
+import ij.io.Opener;
+
+	double[] xvalues = {1,2,3,4,5,6,7,8,9};
+	double[] yvalues = {1,2,3,4,5,6,7,8,9};
+	
+	Plot getPlot(String Graphtitle, String xtitle, String ytitle, double[] xvalues, double[] yvalues){
+	for(i=0;i<xvalues.length;i++){
+		
+		min_xvalues=0.000000;
+		if(xvalues[i+1]<xvalues[i])
+		min_xvalues=xvalues[i+1];
+		
+		max_xvalues=0.000000;
+		if(xvalues[i+1]>xvalues[i])
+		max_xvalues=xvalues[i+1];
+	}
+
+	Plot plot = new Plot(Graphtitle, xtitle, ytitle);
+	plot.setLimits(xvalues[0], xvalues[nx-1], yvalues[0], yvalues[yvalues.length-1]);
+	plot.addPoints(xvalues, yvalues, Plot.LINE);
+	plot.setPlotMaker(this);
+	plot.show();
+	return plot;
+	}
+	
+	Xtitle="frame";
+	Ytitle="intensity";
+	Graphtitle="graph";
+	getPlot(Graphtitle, Xtitle, Ytitle, xvalues, yvalues);
+	IJ.saveAs("txt", "D:\\Micromanager del folder\\testResults.xls");
+	//@ImagePlus imp
+/*
+ * Multichannel_Plot_Profile.bsh
+ * IJ BAR: https://github.com/tferr/Scripts#scripts
+ *
+ * BeanShell script that extends the Analyze>Plot Profile to multichannel (composite) images. It
+ * features a "live" option, guesses displayed lookup tables and ignores disabled channels (i.e.,
+ * those deselected in the "Channels" widget (which can be called by pressing "Z", the shortcut for
+ * "Image>Color>Channels Tool"). Similarly to the built-in Analyze>Plot Profile, Y-axis limits are
+ * always set by the active channel.
+ *
+ * This builds upon Jerome Mutterer's take on a remarkably succinct script using bit-twiddling to
+ * detect displayed LUTs (discussed here: https://github.com/tferr/Scripts/issues/6).
+ *
+ */
+import ij.gui.Plot;
+import java.util.Arrays; 
+import java.util.Collections; 
+import ij.IJ;
+import ij.io.FileSaver;
+import ij.io.Opener;
+
+	double[] xvalues = {1,2,3,4,5,6,7,8,9};
+	double[] yvalues = {1,2,3,4,5,6,7,8,9};
+	
+	Plot getPlot(String Graphtitle, String xtitle, String ytitle, double[] xvalues, double[] yvalues){
+	for(i=0;i<xvalues.length;i++){
+		
+		min_xvalues=0.000000;
+		if(xvalues[i+1]<xvalues[i])
+		min_xvalues=xvalues[i+1];
+		
+		max_xvalues=0.000000;
+		if(xvalues[i+1]>xvalues[i])
+		max_xvalues=xvalues[i+1];
+	}
+
+	Plot plot = new Plot(Graphtitle, xtitle, ytitle);
+	plot.setLimits(xvalues[0], xvalues[nx-1], yvalues[0], yvalues[yvalues.length-1]);
+	plot.addPoints(xvalues, yvalues, Plot.LINE);
+	plot.setPlotMaker(this);
+	plot.show();
+	return plot;
+	}
+	
+	Xtitle="frame";
+	Ytitle="intensity";
+	Graphtitle="graph";
+	getPlot(Graphtitle, Xtitle, Ytitle, xvalues, yvalues);
+	IJ.saveAs("txt", "D:\\Micromanager del folder\\testResults.xls");
+	

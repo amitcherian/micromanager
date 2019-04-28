@@ -1,0 +1,8 @@
+To invoke or call a macro
+
+import ij.measure.ResultsTable;
+import ij.io.DirectoryChooser;
+import ij.gui.Plot;
+import ij.IJ;
+import ij.io.FileSaver;
+ij.IJ.open("D:\\MM Macro\\GFac.ijm");

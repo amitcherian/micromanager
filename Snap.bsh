@@ -1,0 +1,7 @@
+acqName = gui.getUniqueAcquisitionName("g");//set folder name 
+gui.openAcquisition(acqName, "D:\\", 2, 1, 0, true, false);	//initialise acquisition 
+mmc.snapImage();
+im1 = mmc.getTaggedImage(0); //load image from camera 1
+im2 = mmc.getTaggedImage(1); //load image from camera 2
+gui.addImageToAcquisition(acqName, 0, 0, z, pos, im1);
+gui.addImageToAcquisition(acqName, 1, 0, z, pos, im2); 

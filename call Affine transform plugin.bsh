@@ -1,0 +1,3 @@
+import ij.IJ;
+imp = IJ.getImage();
+IJ.run("StackReg", "transformation=Affine");

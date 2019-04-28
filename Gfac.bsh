@@ -1,0 +1,43 @@
+import java.awt.Color;
+import java.awt.Shape;
+import java.awt.geom.Ellipse2D;
+import java.awt.geom.Point2D;
+import org.jfree.chart.axis.LogAxis;
+import org.jfree.chart.axis.NumberTickUnit;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartFrame;
+import org.jfree.data.xy.XYSeriesCollection;
+import org.jfree.data.xy.XYSeries;
+import ij.measure.ResultsTable;
+import ij.io.DirectoryChooser;
+import ij.gui.Plot;
+import java.util.Arrays; 
+import java.util.Collections;
+import java.text.SimpleDateFormat;
+import ij.IJ;
+import ij.io.FileSaver;
+
+gui.refreshGUI(); 
+gui.refreshGUIFromCache(); 
+gui.closeAllAcquisitions(); 
+gui.clearMessageWindow(); 
+
+
+//Find G-Factor
+
+paGFac=IJ.openImage("D:\\Visco\\20X\\FITCM_1\\Pos0\\img_000000000_PA-GFP_000.tif");
+peGFac=IJ.openImage("D:\\Visco\\20X\\FITCM_1\\Pos0\\img_000000000_PE-GFP_000.tif");
+PAG=paGFac.getProcessor();
+PEG=peGFac.getProcessor();
+ij.plugin.ImageCalculator calc = new ij.plugin.ImageCalculator();
+GFac = calc.run("Divide create 32-bit", new ij.ImagePlus("1",PAG), new ij.ImagePlus("2",PEG) );
+
+GFac.show();
+pa1 = GFac.createImagePlus();
+ip = GFac.getProcessor().duplicate();
+pa1.setProcessor("GFac copy", ip);
+pa1.show();	

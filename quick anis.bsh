@@ -1,0 +1,123 @@
+import java.awt.Color;
+import java.awt.Shape;
+import java.awt.geom.Ellipse2D;
+import java.awt.geom.Point2D;
+import org.jfree.chart.axis.LogAxis;
+import org.jfree.chart.axis.NumberTickUnit;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartFrame;
+import org.jfree.data.xy.XYSeriesCollection;
+import org.jfree.data.xy.XYSeries;
+import ij.measure.ResultsTable;
+import ij.io.DirectoryChooser;
+import ij.gui.Plot;
+import java.util.Arrays; 
+import java.util.Collections;
+import java.text.SimpleDateFormat;
+import ij.IJ;
+import ij.io.FileSaver;
+
+gui.refreshGUI(); 
+gui.refreshGUIFromCache(); 
+gui.closeAllAcquisitions(); 
+gui.clearMessageWindow(); 
+
+//-------------------Acquisition---------------------//
+DirectoryChooser dr = new DirectoryChooser("Choose the directory"); 
+dr.setDefaultDirectory("D:\temp"); 
+acqDir = dr.getDirectory(); 
+
+print("image:"+ acqDir);	//print acquisition directory 
+paCamera="Dcam1";//PA camera name
+peCamera="DCam2";//PE camera name
+propertyName = "Gain"; // property to be changed, MultiplierGain in most cases
+int[] GainList = {2}; // Gain List 
+int[] ExpList = {100}; //Exposure list
+//int[] LasList = {}; // Enter the laser powers for the respective Gains
+//laserName = "AAAOTF"; // laser name 
+//laserProperty = "Laser Power"; // laser property to be changed 
+
+nCh = 2; // # of cameras 
+
+/*-----------Not required to edit beyond this point unless really necessary---------------------*/
+nG = GainList.length; // populate number of gains
+nE = ExpList.length; //Populate number of exposures
+nZ = nPos = 0; // # of Z and xy positions 
+z = pos = 0; // initialised to zero as there are no z stacks or multipoint 
+double[] xvalues = new double[ExpList.length];
+double[] gfac_y = new double[ExpList.length];
+double[] pa_y = new double[ExpList.length];
+double[] pe_y = new double[ExpList.length];
+
+
+                
+	acqName = gui.getUniqueAcquisitionName("g");//set folder name 
+//openAcquisition(String, String, int, int, int, int, boolean, boolean)
+//openAcquisition(acqname, rootDir, nrFrames, nrChannels, nrSlices, nrPositions, show, save)
+	gui.openAcquisition(acqName, acqDir, nE*nCh, 1, nZ, true, false);	//initialise acquisition 
+//newValue = String.valueOf(LasList[g]); // load new value of laser power 
+//mmc.setProperty(laserName, laserProperty, newValue);// Set the above mentioned properties                         
+	
+		//set exposure from exposure list 
+     	gui.refreshGUI(); //refresh GUI to show the set parameters on the GUI
+		mmc.snapImage();
+		 
+		
+			im1 = mmc.getTaggedImage(0); //load image from camera 1
+			im2 = mmc.getTaggedImage(1); //load image from camera 2
+		gui.addImageToAcquisition(acqName, 0, 0, z, pos, im1);
+		gui.addImageToAcquisition(acqName, 1, 0, z, pos, im2); 
+		img = ij.IJ.getImage();
+ij.ImageStack stack = img.getImageStack();
+
+for (int i=0; i <stack.getSize()/2; i++) {
+	pa = stack.getProcessor(2*i + 1);
+	pe = stack.getProcessor(2*i + 2);}
+
+
+/*-------------Analysis---------------*/
+//Find G-Factor
+paGFac=IJ.openImage("D:\\Visco\\20X\\FITCM_1\\Pos0\\img_000000000_PA-GFP_000.tif");
+peGFac=IJ.openImage("D:\\Visco\\20X\\FITCM_1\\Pos0\\img_000000000_PE-GFP_000.tif");
+PAG=paGFac.getProcessor();
+PEG=peGFac.getProcessor();
+ij.plugin.ImageCalculator add = new ij.plugin.ImageCalculator();
+ij.plugin.ImageCalculator sub = new ij.plugin.ImageCalculator();
+ij.plugin.ImageCalculator mult = new ij.plugin.ImageCalculator();
+ij.plugin.ImageCalculator div = new ij.plugin.ImageCalculator();
+GFac = calc.run("Divide create 32-bit", new ij.ImagePlus("1",PAG), new ij.ImagePlus("2",PEG) );
+ij.process.ImageStatistics statsGFac = GFac.getStatistics();
+print("Gfactor is "+statsGFac.mean);
+/////////PE*Gfac
+PA1=GFac.getProcessor();
+
+pe_cor = mult.run("Multiply create 32-bit", new ij.ImagePlus("1", PA1), new ij.ImagePlus("2",pe) );
+PE_cor = pe_cor.createImagePlus();
+ip = pe_cor.getProcessor().duplicate();
+PE_cor.setProcessor("PECor copy", ip);
+
+
+//2*PE
+mathx2=IJ.openImage("D:\\Visco\\Math2.tif");
+PA2=pe_cor.getProcessor();
+PE2=mathx2.getProcessor();
+PEx2 = mult.run("Multiply create 32-bit", new ij.ImagePlus("1",PA2), new ij.ImagePlus("2",PE2) );
+
+//Numerator: PA-PE
+PE3=pe_cor.getProcessor();
+Numer = sub.run("Subtract create 32-bit", new ij.ImagePlus("1",pa), new ij.ImagePlus("2",PE3) );
+
+//Denominator: PA+2*PE
+PE4=PE_cor.getProcessor();
+Deno = add.run("Add create 32-bit", new ij.ImagePlus("1",pa), new ij.ImagePlus("2",PE4) );
+
+//Anis=Num/Den
+PA5=Numer.getProcessor();
+PE5=Deno.getProcessor();
+Anis = div.run("Divide create 32-bit", new ij.ImagePlus("1",PA5), new ij.ImagePlus("2",PE5) );
+Anis.show();
+

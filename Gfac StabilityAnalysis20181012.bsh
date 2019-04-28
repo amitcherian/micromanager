@@ -1,0 +1,140 @@
+/*
+ * AUTHOR: Amit Cherian, National Centre for Biological Sciences, Bangalore, India
+ * GFacStabilityOverTimeTest
+ * Beanshell script for checking GFacStability
+ * Acquires images->Analyses and Plots the data
+ * 
+ * Edit
+ * 
+ */
+import java.awt.Color;
+import java.awt.Shape;
+import java.awt.geom.Ellipse2D;
+import java.awt.geom.Point2D;
+import org.jfree.chart.axis.LogAxis;
+import org.jfree.chart.axis.NumberTickUnit;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartFrame;
+import org.jfree.data.xy.XYSeriesCollection;
+import org.jfree.data.xy.XYSeries;
+import ij.measure.ResultsTable;
+import ij.io.DirectoryChooser;
+
+gui.refreshGUI(); 
+gui.refreshGUIFromCache(); 
+gui.closeAllAcquisitions(); 
+gui.clearMessageWindow(); 
+
+//-------------------Acquisition---------------------//
+DirectoryChooser dr = new DirectoryChooser("Choose the directory"); 
+dr.setDefaultDirectory("D:\temp"); 
+acqDir = dr.getDirectory(); 
+
+//Update these parameters
+paCamera="Dcam1";//PA camera name
+peCamera="DCam2";//PE camera name
+int[] GainList = {3}; // Gain List
+int[] ExpList = { 2000, 1500, 1000, 800, 600, 400, 200, 100, 50 }; //Exposure list 
+
+//Do not edit beyond this point
+nG = GainList.length; // populate number of gains
+nE = ExpList.length; //Populate number of exposures
+nCh = 2; // # of cameras 
+nZ = nPos = 0; // # of Z and xy positions 
+z = pos = 0; // initialised to zero as there are no z stacks or multipoint 
+
+for( g = 0; g < nG; g++ ){	// loop for varying Gain 
+	propertyName = "Gain"; // property to be changed 
+	newValue = String.valueOf(GainList[g]); // load list of gain 
+	mmc.setProperty(paCamera, propertyName, newValue);// Set the above mentioned properties 
+	mmc.setProperty(peCamera, propertyName, newValue);// Set the above mentioned properties 
+                
+	acqName = gui.getUniqueAcquisitionName("EMGain "+ GainList[g]); //set folder name 
+//openAcquisition(String, String, int, int, int, int, boolean, boolean)
+//openAcquisition(acqname, rootDir, nrFrames, nrChannels, nrSlices, nrPositions, show, save)
+	gui.openAcquisition(acqName, acqDir, nE*nCh, 1, nZ, true, true);	//initialise acquisition 
+                        
+	for( e = 0; e < nE; e++ ){	// loop for varying exposures  
+		mmc.setExposure(ExpList[e]); //set exposure from exposure list 
+     	gui.refreshGUI(); //refresh GUI to show the set parameters on the GUI
+		mmc.snapImage();
+		 
+		//for (int ch = 0; ch < nCh; ch++){ // loop for multicam image 
+			im1 = mmc.getTaggedImage(0); //load image from camera 1
+			im2 = mmc.getTaggedImage(1); //load image from camera 2
+//addImageToAcquisition(String, int, int, int, int, mmcorej.TaggedImage)
+//addImageToAcquisition(acqName, frame, channel, slice, position, taggedImg)
+			gui.addImageToAcquisition(acqName, 2*e+1-1, 0, z, pos, im1);
+			gui.addImageToAcquisition(acqName, 2*e+2-1, 0, z, pos, im2); 
+         //} 
+      mmc.sleep(50);//rest(ms) before next image
+      } 
+}
+
+/*-------------Create dynamic canvas to Plot--------------*/
+public static void plotData(String title, XYSeries data, String xTitle,
+           String yTitle, int xLocation, int yLocation, boolean xLog, boolean yLog) {
+      // JFreeChart code
+      XYSeriesCollection dataset = new XYSeriesCollection();
+      dataset.addSeries(data);
+      JFreeChart chart = ChartFactory.createScatterPlot(title, // Title
+                xTitle, // x-axis Label
+                yTitle, // y-axis Label
+                dataset, // Dataset
+                PlotOrientation.VERTICAL, // Plot Orientation
+                false, // Show Legend
+                true, // Use tooltips
+                false // Configure chart to generate URLs?
+            );
+      XYPlot plot = (XYPlot) chart.getPlot();
+      plot.setBackgroundPaint(Color.white);
+      plot.setRangeGridlinePaint(Color.lightGray);
+		XYLineAndShapeRenderer renderer = (XYLineAndShapeRenderer) plot.getRenderer();
+      renderer.setBaseShapesVisible(true);
+      renderer.setSeriesPaint(0, Color.black);
+      renderer.setSeriesFillPaint(0, Color.white);
+      renderer.setSeriesLinesVisible(0, true);
+      Shape circle = new Ellipse2D.Float(-2.0f, -2.0f, 4.0f, 4.0f);
+      renderer.setSeriesShape(0, circle, false);
+      renderer.setUseFillPaint(true);
+
+      ChartFrame graphFrame = new ChartFrame(title, chart);
+      graphFrame.getChartPanel().setMouseWheelEnabled(true);
+      graphFrame.pack();
+      graphFrame.setLocation(xLocation, yLocation);
+      graphFrame.setVisible(true);
+   }
+
+
+/*-------------Analysis and Plotting---------------*/
+img = ij.IJ.getImage();
+ij.ImageStack stack = img.getImageStack();
+ij.plugin.ImageCalculator calc = new ij.plugin.ImageCalculator();
+XYSeries data = new XYSeries("");
+ResultsTable rt = new ResultsTable();
+rt.reset();
+
+for (int i=0; i <stack.getSize()/2; i++) {
+	pa = stack.getProcessor(2*i + 1);
+	pe = stack.getProcessor(2*i + 2);
+	ij.process.ImageStatistics paStats = pa.getStatistics();
+	ij.process.ImageStatistics peStats = pe.getStatistics();
+	GFac = calc.run("Divide create 32-bit", new ij.ImagePlus("1", pa), new ij.ImagePlus("2",pe) );
+	ij.process.ImageStatistics GFacstats = GFac.getStatistics();
+	stdDev = GFacstats.stdDev;
+	rt.incrementCounter();
+	rt.addValue("PA mean", paStats.mean);
+	rt.addValue("PE mean", peStats.mean);
+	rt.addValue("GFac mean", GFacstats.mean);
+	
+	gui.message("Processing: " + i);
+	data.add(i, GFacstats.mean);
+}
+
+t = "2Cam Ratio" + img.getTitle();
+rt.show(t);
+plotData("Gfac", data, "Frame #", "GFac", 100, 100, true, true);

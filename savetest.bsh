@@ -1,0 +1,37 @@
+import mmcorej.CharVector; 
+import org.micromanager.api.AcquisitionOptions;
+import org.micromanager.api.PositionList;
+import org.micromanager.api.MultiStagePosition;
+import org.micromanager.api.StagePosition;
+
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.lang.System;
+
+import org.apache.commons.math.stat.StatUtils;
+import org.apache.commons.math.stat.descriptive.DescriptiveStatistics;
+
+import ij.IJ;
+import ij.ImagePlus;
+import ij.io.Opener;
+import ij.measure.Measurements;
+import ij.measure.ResultsTable;
+import ij.plugin.filter.BackgroundSubtracter;
+import ij.plugin.filter.ParticleAnalyzer;
+import ij.process.ImageProcessor;
+import ij.ImagePlus;
+import ij.io.FileSaver;
+import ij.WindowManager;  
+import ij.text.TextWindow; 
+import ij.plugin.Duplicator;
+import ij.text.TextPanel;
+import ij.plugin.frame.RoiManager;
+import ij.plugin.ImageCalculator;
+
+IJ.saveAs("Results", "D:\\\\testResults.xls");

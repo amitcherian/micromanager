@@ -1,0 +1,68 @@
+import java.awt.Color;
+import java.awt.Shape;
+import java.awt.geom.Ellipse2D;
+import java.awt.geom.Point2D;
+import org.jfree.chart.axis.LogAxis;
+import org.jfree.chart.axis.NumberTickUnit;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartFrame;
+import org.jfree.data.xy.XYSeriesCollection;
+import org.jfree.data.xy.XYSeries;
+import ij.measure.ResultsTable;
+import ij.io.DirectoryChooser;
+import ij.gui.Plot;
+import java.util.Arrays; 
+import java.util.Collections;
+import java.text.SimpleDateFormat;
+import ij.IJ;
+import ij.io.FileSaver;
+
+gui.refreshGUI(); 
+gui.refreshGUIFromCache(); 
+gui.closeAllAcquisitions(); 
+gui.clearMessageWindow(); 
+/*
+DirectoryChooser dr = new DirectoryChooser("Choose the directory"); 
+dr.setDefaultDirectory("D:\temp"); 
+acqDir = "D:\\Temp" ;
+
+print("image:"+ acqDir);	//print acquisition directory 
+
+int[] GainList = {2}; // Gain List 
+nG = GainList.length; 
+int[] ExpList = {50}; 
+nE = ExpList.length; 
+nCh = 2; // # of cameras 
+nZ = nPos = 0; // # of Z and xy positions 
+z = pos = 0; 
+                
+	acqName = gui.getUniqueAcquisitionName("EMGain 2"); //set folder name 
+	gui.openAcquisition(acqName, acqDir, nE, nCh, nZ, true, false);	
+                        
+	for( e = 0; e < nE; e++ ){	// loop for varying exposures  
+		mmc.setExposure(ExpList[e]); //set exposure from exposure list 
+     	gui.refreshGUI(); 
+		mmc.snapImage();
+		 
+		for (int ch = 0; ch < nCh; ch++){ // loop for multicam image 
+			im = mmc.getTaggedImage(ch); 
+			gui.addImageToAcquisition(acqName, e, ch, z, pos, im); 
+         } 
+      mmc.sleep(50);//rest(ms) before next image
+      } 
+*/
+
+pa = IJ.openImage("D:\\MM Test Delte folder\\EMGain 2\\Pos0\\img_000000000_Dcam1_000.tif"); 
+      
+ij.IJ.open("D:\\MM Macro\\LiveAnis.ijm");
+pa.show();
+//blobs = IJ.openImage("D:\\MM Test Delte folder\\EMGain 2\\Pos0\\img_000000000_Dcam1_000.tif");
+
+pa1 = pa.createImagePlus();
+ip = pa.getProcessor().duplicate();
+pa1.setProcessor("blobs copy", ip);
+pa1.show();

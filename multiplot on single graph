@@ -1,0 +1,80 @@
+//@ImagePlus imp
+/*
+ * Multichannel_Plot_Profile.bsh
+ * IJ BAR: https://github.com/tferr/Scripts#scripts
+ *
+ * BeanShell script that extends the Analyze>Plot Profile to multichannel (composite) images. It
+ * features a "live" option, guesses displayed lookup tables and ignores disabled channels (i.e.,
+ * those deselected in the "Channels" widget (which can be called by pressing "Z", the shortcut for
+ * "Image>Color>Channels Tool"). Similarly to the built-in Analyze>Plot Profile, Y-axis limits are
+ * always set by the active channel.
+ *
+ * This builds upon Jerome Mutterer's take on a remarkably succinct script using bit-twiddling to
+ * detect displayed LUTs (discussed here: https://github.com/tferr/Scripts/issues/6).
+ *
+ */
+import ij.gui.Plot;
+import java.util.Arrays; 
+import java.util.Collections; 
+import ij.IJ;
+import ij.io.FileSaver;
+import ij.io.Opener;
+
+	double[] x1values = {1,2,3,4,5,6,7,8,9};
+	double[] y1values = {1,2,3,4,5,6,7,8,9};
+	double[] x2values = {1,2,3,4,5,6,7,8,9};
+	double[] y2values = {1,4,9,4,5,6,7,8,9};
+
+	
+	Plot getPlot(String Graphtitle, String xtitle, String ytitle, double[] xvalues, double[] yvalues){
+	for(i=0;i<x1values.length;i++){
+		min_x1values=0.000000;
+		if(x1values[i+1]<x1values[i])
+		min_x1values=x1values[i+1];
+		max_x1values=0.000000;
+		if(x1values[i+1]>x1values[i])
+		max_y1values=x1values[i+1];
+		min_y1values=0.000000;
+		if(y1values[i+1]<y1values[i])
+		min_y1values=y1values[i+1];
+		max_y1values=0.000000;
+		if(y1values[i+1]>y1values[i])
+		max_y1values=y1values[i+1];
+	}
+for(i=0;i<x2values.length;i++){
+	min_x2values=0.000000;
+		if(x2values[i+1]<x2values[i])
+		min_x2values=x2values[i+1];
+		max_x2values=0.000000;
+		if(x2values[i+1]>x2values[i])
+		max_y2values=x2values[i+1];
+		min_y2values=0.000000;
+		if(y2values[i+1]<y2values[i])
+		min_y2values=y2values[i+1];
+		max_y2values=0.000000;
+		if(y2values[i+1]>y2values[i])
+		max_y2values=y2values[i+1];	
+	}
+	xmin=min_x1values;
+	if(xmin>min_x2values);
+	xmin=min_x2values;
+	xmax=max_x1values;
+	if(xmax<max_x2values;
+	xmax=max_x2values;
+	ymin=
+	ymax=
+	Plot plot = new Plot(Graphtitle, xtitle, ytitle);
+	plot.setLimits(xmin, xmax, ymin, ymax);
+	plot.addPoints(x1values, y1values, Plot.LINE);
+	plot.addPoints(x2values, y2values, Plot.LINE);
+	plot.setPlotMaker(this);
+	plot.show();
+	return plot;
+	}
+	
+	Xtitle="frame";
+	Ytitle="intensity";
+	Graphtitle="graph";
+	getPlot(Graphtitle, Xtitle, Ytitle, xvalues, yvalues);
+	IJ.saveAs("txt", "D:\\Micromanager del folder\\testResults.xls");
+	

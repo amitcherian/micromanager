@@ -1,0 +1,160 @@
+import java.awt.Color;
+import java.awt.Shape;
+import java.awt.geom.Ellipse2D;
+import java.awt.geom.Point2D;
+import org.jfree.chart.axis.LogAxis;
+import org.jfree.chart.axis.NumberTickUnit;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartFrame;
+import org.jfree.data.xy.XYSeriesCollection;
+import org.jfree.data.xy.XYSeries;
+import ij.measure.ResultsTable;
+import ij.io.DirectoryChooser;
+import ij.gui.Plot;
+import java.util.Arrays; 
+import java.util.Collections;
+import java.text.SimpleDateFormat;
+import ij.IJ;
+import ij.io.FileSaver;
+
+gui.refreshGUI(); 
+gui.refreshGUIFromCache(); 
+gui.closeAllAcquisitions(); 
+gui.clearMessageWindow(); 
+
+//-------------------Acquisition---------------------//
+DirectoryChooser dr = new DirectoryChooser("Choose the directory"); 
+dr.setDefaultDirectory("D:\temp"); 
+acqDir = dr.getDirectory(); 
+
+print("image:"+ acqDir);	//print acquisition directory 
+paCamera="Dcam1";//PA camera name
+peCamera="DCam2";//PE camera name
+propertyName = "Gain"; // property to be changed, MultiplierGain in most cases
+int[] GainList = {2,4}; // Gain List 
+int[] ExpList = { 2000, 1500, 1000, 800, 600, 400, 200, 100, 50 }; //Exposure list
+//int[] LasList = {}; // Enter the laser powers for the respective Gains
+//laserName = "AAAOTF"; // laser name 
+//laserProperty = "Laser Power"; // laser property to be changed 
+
+nCh = 2; // # of cameras 
+
+/*-----------Not required to edit beyond this point unless really necessary---------------------*/
+nG = GainList.length; // populate number of gains
+nE = ExpList.length; //Populate number of exposures
+nZ = nPos = 0; // # of Z and xy positions 
+z = pos = 0; // initialised to zero as there are no z stacks or multipoint 
+double[] xvalues = new double[ExpList.length];
+double[] gfac_y = new double[ExpList.length];
+double[] pa_y = new double[ExpList.length];
+double[] pe_y = new double[ExpList.length];
+
+for( g = 0; g < nG; g++ ){	// loop for varying Gain 
+	newValue = String.valueOf(GainList[g]); // load list of gain 
+	mmc.setProperty(paCamera, propertyName, newValue);// Set the above mentioned properties 
+	mmc.setProperty(peCamera, propertyName, newValue);// Set the above mentioned properties 
+                
+	acqName = gui.getUniqueAcquisitionName("EMGain "+ GainList[g]);//set folder name 
+//openAcquisition(String, String, int, int, int, int, boolean, boolean)
+//openAcquisition(acqname, rootDir, nrFrames, nrChannels, nrSlices, nrPositions, show, save)
+	gui.openAcquisition(acqName, acqDir, nE*nCh, 1, nZ, true, true);	//initialise acquisition 
+//newValue = String.valueOf(LasList[g]); // load new value of laser power 
+//mmc.setProperty(laserName, laserProperty, newValue);// Set the above mentioned properties                         
+	for( e = 0; e < nE; e++ ){	// loop for varying exposures  
+		mmc.setExposure(ExpList[e]); //set exposure from exposure list 
+     	gui.refreshGUI(); //refresh GUI to show the set parameters on the GUI
+		mmc.snapImage();
+		 
+		//for (int ch = 0; ch < nCh; ch++){ // loop for multicam image 
+			im1 = mmc.getTaggedImage(0); //load image from camera 1
+			im2 = mmc.getTaggedImage(1); //load image from camera 2
+//addImageToAcquisition(String, int, int, int, int, mmcorej.TaggedImage)
+//addImageToAcquisition(acqName, frame, channel, slice, position, taggedImg)
+			gui.addImageToAcquisition(acqName, 2*e+1-1, 0, z, pos, im1);
+			gui.addImageToAcquisition(acqName, 2*e+2-1, 0, z, pos, im2); 
+         //} 
+      mmc.sleep(50);//rest(ms) before next image
+      } 
+
+
+
+/*-------------Create canvas to Plot--------------*/
+Plot getPlot(String Graphtitle, String xtitle, String ytitle, double[] xvalues, double[] yvalues){
+	Plot plot = new Plot(Graphtitle, xtitle, ytitle);
+	double min_xvalues=xvalues[0];
+	double max_xvalues=xvalues[0];
+	double min_yvalues=yvalues[0];
+	double max_yvalues=yvalues[0];
+	for(i=0;i<xvalues.length;i++){
+		if(min_xvalues>xvalues[i])
+		min_xvalues=xvalues[i];
+		if(max_xvalues<xvalues[i])
+		max_xvalues=xvalues[i];
+		if(min_yvalues>yvalues[i])
+		min_yvalues=yvalues[i];
+		if(max_yvalues<yvalues[i])
+		max_yvalues=yvalues[i];
+		}
+	plot.setLimits(0.9*min_xvalues, 1.1*max_xvalues, 0.9*min_yvalues, 1.1*max_yvalues);
+	plot.addPoints(xvalues, yvalues, Plot.LINE);
+	plot.setPlotMaker(this);
+	plot.show();
+	return plot;
+	}
+	
+	
+/*-------------Analysis and Plotting---------------*/
+img = ij.IJ.getImage();
+ij.ImageStack stack = img.getImageStack();
+ij.plugin.ImageCalculator calc = new ij.plugin.ImageCalculator();
+XYSeries data = new XYSeries("");
+ResultsTable rt = new ResultsTable();
+rt.reset();
+
+for (int i=0; i <stack.getSize()/2; i++) {
+	pa = stack.getProcessor(2*i + 1);
+	pe = stack.getProcessor(2*i + 2);
+	ij.process.ImageStatistics paStats = pa.getStatistics();
+	ij.process.ImageStatistics peStats = pe.getStatistics();
+	GFac = calc.run("Divide create 32-bit", new ij.ImagePlus("1", pa), new ij.ImagePlus("2",pe) );
+	ij.process.ImageStatistics statsGFac = GFac.getStatistics();
+	stdDev = statsGFac.stdDev;
+	rt.incrementCounter();
+	rt.addValue("PA mean", paStats.mean);
+	rt.addValue("PE mean", peStats.mean);
+	rt.addValue("GFac mean", statsGFac.mean);
+	
+	gui.message("Processing: " + i);
+	
+	xvalues[i]=i;
+	gfac_y[i]=statsGFac.mean;
+	pa_y[i]=paStats.mean;
+	pe_y[i]=peStats.mean;
+}
+
+t = "EMGain "+ GainList[g]+" Results";
+rt.show(t);
+
+/*-------------GFac plotting---------------*/	
+	Xtitle="frame";
+	Ytitle="GFac";
+	Graphtitle="EMGain "+ GainList[g]+" Gfac graph";
+	getPlot(Graphtitle, Xtitle, Ytitle, xvalues, gfac_y);
+		
+/*-------------PA Plotting---------------*/
+	Xtitle="frame";
+	Ytitle="intensity";
+	Graphtitle="EMGain "+ GainList[g]+" PA graph";
+	getPlot(Graphtitle, Xtitle, Ytitle, xvalues, pa_y);
+
+/*-------------PE Plotting---------------*/
+	Xtitle="frame";
+	Ytitle="intensity";
+	Graphtitle="EMGain "+ GainList[g]+" PE graph";
+	getPlot(Graphtitle, Xtitle, Ytitle, xvalues, pe_y);
+	
+	}

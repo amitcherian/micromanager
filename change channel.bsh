@@ -1,0 +1,4 @@
+//Change channel
+//mmc.setConfig(groupname, preset);
+mmc.setConfig("Channel", "DAPI");
+gui.refreshGUI();

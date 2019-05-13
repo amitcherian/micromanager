@@ -1,0 +1,7 @@
+gd = new ij.gui.GenericDialog("RCM Configurator"); 
+gd.addNumericField(" ", 1, 0);
+gd.showDialog(); 
+if (gd.wasCanceled()) 
+        return; 
+userNr = gd.getNextNumber();
+mm.scripter().message("User selected: " + (int) userNr);
